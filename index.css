@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.chess-board {
+    border-radius: 1%;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    width: 600px;
+    height: 600px;
+    border: 2px solid black;
+    margin: 20px auto; /* Center the board horizontally */
+}
+
+.square {
+    width: 100%;
+    height: 100%;
+}
+
+
+.light {
+    background-color: #eeeed2;
+}
+
+.dark {
+    background-color: #4B7399;
+}
+
+
+.square {
+    width: 75px;
+    height: 75px;
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center;     /* Center vertically */
+    font-size: 55px;         /* Font size adjusted to fit the square */
+    font-family: "Segoe UI Symbol", Arial, sans-serif; /* Ensure the correct font is used */
+}

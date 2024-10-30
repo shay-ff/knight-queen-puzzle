@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="output.css">
+    <link rel="icon" href="../src/public/favicon.png">
+    <title> Knight and Queen Puzzle </title>
+</head>
+<body class="bg-[#ffffff]  items-center justify-center min-h-screen ">
+    <div class="w-full flex justify-center bg-[#06080E]  py-3">
+        <h1 class="text-white text-7xl font-serif"> Knight and Queen Puzzle </h1>
+    </div>  
+    <div class="w-full flex justify-center">
+        <div class="chess-board overflow-hidden"></div>
+        <div class="absolute top-3 right-3 bg-gradient-to-r from-[#2c3e50] to-[#4b79a1] text-[#ecf0f1] px-4 py-2 rounded-lg shadow-lg font-mono text-sm flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#4B7399]" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v3a1 1 0 102 0V5zm-1 8a1 1 0 100-2 1 1 0 000 2zm-.707-1.707l-2.293-2.293a1 1 0 011.414-1.414l2.293 2.293a1 1 0 11-1.414 1.414zm3.5-3.5a1 1 0 10-1.414-1.414l-2.293 2.293a1 1 0 001.414 1.414l2.293-2.293z" clip-rule="evenodd" />
+            </svg>
+            Timer: <span id="stopwatch">00:00:00</span>
+        </div>
+    </div>
+    <div class="flex justify-center">
+        <button input ="checkbox" class="bg-white/5 hover:bg-white/50 hover:text-black flex items-center rounded-md ml-0 mr-4 px-4 py-1" onClick="showBlocked()"> Show blocked squares
+            <span id="blockedDot" class="w-2 h-2 rounded-full ml-2"></span>
+        </button>
+        <button class="bg-white px-4 py-1 rounded-md hover:bg-white/50 hover:text-white" onClick = "resetBoard()" > Reset </button>
+    </div>
+    <div class="flex justify-center items-center pt-3 ">
+        <div id="rulesbox" class="max-w-full p-4 bg-white border border-gray-200 justify-center rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold text-center text-gray-800 mb-2 items-center justify-center">Rules</h2>
+            <ul class="list-disc list-inside text-gray-700 space-y-2 mb-4 text-left">
+                <li>Move the knight to every square in order.</li>
+                <li>Traverse from right to left, top to bottom.</li>
+                <li>Avoid landing anywhere the queen can take you.</li>
+                <li>Do not take the queen.</li>
+            </ul>
+            <div class="border-t border-gray-300 pt-2 text-center text-gray-500 text-sm">
+                Made by <a href="https://github.com/shay-ff/knight-queen" target="_blank" class="text-blue-500 hover:underline">Mohd. Ali</a>
+                and inspired by 
+                <a href="https://youtu.be/SrQlpY_eGYU?t=10" target="_blank" class="text-blue-500 hover:underline">Ben Finegold.</a>
+            </div>
+        </div>
+    </div>
+    <script src = "app.js" ></script>
+</body>
+</html>
