@@ -28,14 +28,14 @@ const movesCount = document.getElementById("movesCount");
 
 QueenImg.id = "queen";
 QueenImg.draggable = false;
-QueenImg.src = "./public/blackQueen.png";
+QueenImg.src = "./assets/blackQueen.png";
 QueenImg.width = 75;
 QueenImg.height = 75;
 
 KnightImg.id = "knight";
 KnightImg.draggable = true;
 KnightImg.ondragstart = drag;
-KnightImg.src = "./public/whiteKnight.png";
+KnightImg.src = "./assets/whiteKnight.png";
 KnightImg.width = 75;
 KnightImg.height = 75;
 
