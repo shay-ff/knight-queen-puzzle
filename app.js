@@ -39,6 +39,18 @@ KnightImg.src = "./assets/whiteKnight.png";
 KnightImg.width = 75;
 KnightImg.height = 75;
 
+function celebrate(){
+  confetti({
+    particleCount: 300,
+    spread: 90,
+    origin: { x: 0, y: 0.9 },
+  });
+  confetti({
+    particleCount: 100,
+    spread: 70,
+    origin: { x: 1,  y: 0.9 },
+  });
+}
 function getRowCol(id) {
   // console.log(id);
   // Calculate row and column based on 1-based indexing
@@ -157,8 +169,9 @@ function drop(ev) {
       } else {
         stopTimer();
         // End the game when the last path position is reached
+        celebrate();
         open = false;
-        new Audio("../alerts/victory-sound.ogg").play();
+        new Audio("../alerts/level-win-6416.mp3").play();
       }
       return;
     }
