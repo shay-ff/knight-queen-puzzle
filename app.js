@@ -258,7 +258,9 @@ function resetTimer() {
 function showPath() {
   const currDiv = document.getElementById(path[ptr]);
   if (currDiv) {
-    currDiv.style.backgroundColor = "#fdf718";
+    if(difficulty !== "expert") {
+      currDiv.style.backgroundColor = "#fdf718";
+    }
   }
 }
 
@@ -314,8 +316,10 @@ function drop(ev) {
       // Show message based on difficulty
       if (difficulty === "hard" && wrongMoves >= 3) {
         showTryAgainPopup("You made 3 wrong moves!", "Go again!");
+        resetBoard();
       } else if (difficulty === "expert") {
         showTryAgainPopup("You made a wrong move!", "Go Again!");
+        resetBoard();
       }
 
       // Play error sound and show invalid move animation
