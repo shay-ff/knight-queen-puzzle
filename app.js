@@ -350,7 +350,7 @@ function showTryAgainPopup(title, message) {
   `;
   document.body.appendChild(tryAgain);
 }
-
+ 
 
 function initBoard() {
   moveCount = 0;

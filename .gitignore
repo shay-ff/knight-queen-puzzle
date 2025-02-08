@@ -1,4 +1,20 @@
+# Ignore node_modules and dependencies
 node_modules/
-tailwind.config.js/
-package-lock.json/
+package-lock.json
+package.json
 
+# Ignore config files
+postcss.config.js
+tailwind.config.js
+
+# Ignore build artifacts and caches
+dist/
+build/
+.cache/
+output.css
+
+# Ignore system and editor files
+.DS_Store
+.vscode/
+.idea/
+*.log
