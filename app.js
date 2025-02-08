@@ -163,6 +163,7 @@ function makeMove(targetSquare) {
 
   knight.style.transition = "transform 0.3s ease-out";
   targetSquare.appendChild(knight);
+  
   new Audio("./alerts/move-sound.ogg").play();
 
   if (parseInt(targetSquare.id) === path[ptr]) {
@@ -170,6 +171,7 @@ function makeMove(targetSquare) {
     ptr++;
     if (ptr < path.length) {
       showPath();
+      deselectSquare();
     } else {
       stopTimer();
       celebrate();
@@ -302,15 +304,15 @@ function drop(ev) {
 
   if (ev.target && ev.target.id) {
     const targetDivId = parseInt(ev.target.id);
-
+    
     if (isLegalMove(currDivId, targetDivId)) {
       makeMove(ev.target);
     } else {
       // If the knight is dropped on the same square where it was picked up, don't increment `wrongMoves`
-      if (currDivId !== targetDivId && currDivId !== 0) {
+      // suggest suitable changes
+      if(currDivId !== targetDivId) {
         wrongMoves++;
       }
-
       console.log(wrongMoves);
 
       // Show message based on difficulty
@@ -321,13 +323,13 @@ function drop(ev) {
         showTryAgainPopup("You made a wrong move!", "Go Again!");
         resetBoard();
       }
-
       // Play error sound and show invalid move animation
       new Audio("./alerts/decline.mp3").play();
       showInvalidMoveAnimation(ev.target);
     }
   }
 }
+
 
 // Function to show the popup
 function showTryAgainPopup(title, message) {
@@ -380,6 +382,8 @@ function initBoard() {
   let squares = document.querySelectorAll(".square");
   squares[3 * 8 + 3].appendChild(QueenImg);
   squares[7].appendChild(KnightImg);
+  // make the first div green
+  squares[7].style.backgroundColor = "#BBF7D0";
   showPath();
 }
 
