@@ -1,3 +1,4 @@
+// Game constants
 const globalFalse = [
   1, 4, 7, 10, 12, 14, 19, 20, 21, 25, 26, 27, 28, 29, 30, 31, 32, 35, 36, 37,
   42, 44, 46, 49, 52, 55, 60,
@@ -6,40 +7,47 @@ const path = [
   6, 5, 3, 2, 16, 15, 13, 11, 9, 24, 23, 22, 18, 17, 40, 39, 38, 34, 33, 48, 47,
   45, 43, 41, 56, 54, 53, 51, 50, 64, 63, 62, 61, 59, 58, 57,
 ];
+
+// Game state
 let moves = [],
   reached = [],
   coloured = [];
-
 let ptr;
 let chessBoard;
-var blocked = false,
+let blocked = false,
   open = true,
   hardMode = false;
+let selectedSquare = null;
+let moveCount = 0;
+let wrongMoves = 0;
+let difficulty = "normal";
 
+// Timer state
 let startTime;
 let timerInterval;
 let isRunning = false;
 
+// Create piece images
 let QueenImg = document.createElement("img");
 let KnightImg = document.createElement("img");
 
-const movesDiv = document.getElementById("moves");
-const movesCount = document.getElementById("movesCount");
-
+// Setup piece images
 QueenImg.id = "queen";
 QueenImg.draggable = false;
 QueenImg.src = "./assets/blackQueen.png";
-QueenImg.width = 75;
-QueenImg.height = 75;
+QueenImg.className =
+  "w-4/5 h-4/5 object-contain transition-transform hover:scale-105";
 
 KnightImg.id = "knight";
 KnightImg.draggable = true;
 KnightImg.ondragstart = drag;
+KnightImg.onclick = handlePieceClick;
 KnightImg.src = "./assets/whiteKnight.png";
-KnightImg.width = 75;
-KnightImg.height = 75;
+KnightImg.className =
+  "w-4/5 h-4/5 object-contain transition-all cursor-pointer hover:scale-105";
 
-function celebrate(){
+// Game functions
+function celebrate() {
   confetti({
     particleCount: 300,
     spread: 90,
@@ -48,176 +56,164 @@ function celebrate(){
   confetti({
     particleCount: 100,
     spread: 70,
-    origin: { x: 1,  y: 0.9 },
+    origin: { x: 1, y: 0.9 },
   });
 }
+
 function getRowCol(id) {
-  // console.log(id);
-  // Calculate row and column based on 1-based indexing
   var row = Math.floor((id - 1) / 8) + 1;
   var col = ((id - 1) % 8) + 1;
-
-  // console.log(row, col);
   return [row, col];
 }
+
 function getCord(id) {
   const [row, col] = getRowCol(id);
-  let file = "a",
-    rank = 1;
-  switch (col) {
-    case 1:
-      file = "a";
-      break;
-    case 2:
-      file = "b";
-      break;
-    case 3:
-      file = "c";
-      break;
-    case 4:
-      file = "d";
-      break;
-    case 5:
-      file = "e";
-      break;
-    case 6:
-      file = "f";
-      break;
-    case 7:
-      file = "g";
-      break;
-    case 8:
-      file = "h";
-      break;
-  }
-  rank = 9 - row;
+  let file = "abcdefgh"[col - 1];
+  let rank = 9 - row;
   return [file, rank];
 }
+
 function isLegalMove(start, end) {
   const [startRow, startCol] = getRowCol(start);
   const [endRow, endCol] = getRowCol(end);
 
-  if (globalFalse.includes(end)) {
-    // console.log("end is false", end);
-    return false;
-  }
+  if (globalFalse.includes(end)) return false;
+
   let dx = [2, 1, -1, -2, -2, -1, 1, 2];
   let dy = [1, 2, 2, 1, -1, -2, -2, -1];
 
-  for (let x = 0; x < 8; ++x) {
+  for (let x = 0; x < 8; x++) {
     let new_x = startRow + dx[x];
     let new_y = startCol + dy[x];
-    if (new_x === endRow && new_y === endCol) {
-      return true;
-    }
+    if (new_x === endRow && new_y === endCol) return true;
   }
   return false;
 }
 
-function showPath() {
-  const currDiv = document.getElementById(path[ptr]);
-  const [row, col] = getRowCol(path[ptr]);
-  const isLight = (row + col) % 2 === 0;
-  if (currDiv) {
-    currDiv.style.backgroundColor = "#fdf718";
+// Click and drag handlers
+function handlePieceClick(e) {
+  const currentSquare = e.target.parentNode;
+  if (selectedSquare === currentSquare) {
+    deselectSquare();
+    return;
+  }
+
+  if (selectedSquare) {
+    const targetId = parseInt(currentSquare.id);
+    const sourceId = parseInt(selectedSquare.id);
+
+    if (isLegalMove(sourceId, targetId)) {
+      makeMove(currentSquare);
+    } else {
+      new Audio("./alerts/decline.mp3").play();
+      showInvalidMoveAnimation(currentSquare);
+    }
+    deselectSquare();
   } else {
-    console.error(`Div with ID ${path[ptr]} not found.`);
+    selectSquare(currentSquare);
   }
 }
 
-function allowDrop(ev) {
-  ev.preventDefault();
+function selectSquare(square) {
+  selectedSquare = square;
+  square.classList.add("ring-2", "ring-blue-400", "ring-offset-2");
+  showLegalMoves(square);
 }
 
-function drag(ev) {
-  ev.dataTransfer.dropEffect = "none";
-  ev.dataTransfer.setData("text", ev.target.id);
+function deselectSquare() {
+  if (selectedSquare) {
+    selectedSquare.classList.remove("ring-2", "ring-blue-400", "ring-offset-2");
+    removeLegalMoveHighlights();
+    selectedSquare = null;
+  }
 }
 
-function drop(ev) {
-  ev.preventDefault();
-  var data = ev.dataTransfer.getData("text");
-  const knight = document.getElementById(data);
-  const currDiv = knight.parentNode;
-  const currDivId = parseInt(currDiv.id);
+function showLegalMoves(square) {
+  const currentId = parseInt(square.id);
+  const [startRow, startCol] = getRowCol(currentId);
 
-  if (ev.target && ev.target.id) {
-    const targetDivId = parseInt(ev.target.id);
-    // console.log("Current Target ID:", targetDivId, "Path Target ID:", path[ptr]);
-    let legalMove = isLegalMove(currDivId, targetDivId);
-    // Check if the knight is dropped on the current path position
-    if (targetDivId === path[ptr] && legalMove) {
-      startTimer();
-      // Move the knight to the target div
-      const [row, col] = getRowCol(path[ptr]);
-      const [file, rank] = getCord(targetDivId);
-      let currMove = {
-        file: file,
-        rank: rank,
-      };
+  let dx = [2, 1, -1, -2, -2, -1, 1, 2];
+  let dy = [1, 2, 2, 1, -1, -2, -2, -1];
 
-      moves.push(currMove);
-      // console.log(file, rank);
-      const isLight = (row + col) % 2 === 0;
-      ev.target.style.backgroundColor = "#66FF00";
-      // Move the circle to the next path position if there is one
-      new Audio("../alerts/move-sound.ogg").play();
-      ev.target.appendChild(knight);
-      ptr++;
-      if (ptr < path.length) {
-        showPath(); // Function to visually move the circle to path[ptr]
-      } else {
-        stopTimer();
-        // End the game when the last path position is reached
-        celebrate();
-        open = false;
-        new Audio("../alerts/level-win-6416.mp3").play();
+  for (let i = 0; i < 8; i++) {
+    let newRow = startRow + dx[i];
+    let newCol = startCol + dy[i];
+    let newId = (newRow - 1) * 8 + newCol;
+
+    if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+      if (!globalFalse.includes(newId)) {
+        const targetSquare = document.getElementById(newId);
+        targetSquare.classList.add("legal-move");
       }
-      return;
     }
-
-    // Check if the move is legal for the knight
-    if (legalMove || currDivId === targetDivId) {
-      startTimer();
-      const [toFile, toRank] = getCord(targetDivId);
-      // console.log(toFile, toRank);
-      let currMove = {
-        file: toFile,
-        rank: toRank,
-      };
-      moves.push(currMove);
-      new Audio("../alerts/move-sound.ogg").play();
-      ev.target.appendChild(knight);
-    } else {
-      // Play a sound if the move is not allowed
-      new Audio("../alerts/decline.mp3").play();
-    }
-  } else {
-    console.warn("Invalid target for drop - missing ID:", ev.target);
   }
 }
 
-function showBlocked() {
-  blocked = !blocked;
-  globalFalse.forEach((id) => {
-    const element = document.getElementById(id);
-    const [row, col] = getRowCol(id);
-    if (blocked) {
-      // When blocked is true
-      element.style.border = "1px solid black"; // Light shade border when blocked
-      const isLight = (row + col) % 2 === 0;
-      element.style.backgroundColor = isLight ? "#FFA08F" : "#D4613E";
-    } else {
-      // When blocked is false
-      // Determine background color based on row and column
-      const isLight = (row + col) % 2 === 0;
-      element.style.backgroundColor = isLight ? "#EEEED2" : "#4B7399"; // Use your desired colors
-      element.style.border = "none"; // No border when not blocked
-    }
+function removeLegalMoveHighlights() {
+  document.querySelectorAll(".legal-move").forEach((square) => {
+    square.classList.remove("legal-move");
   });
-  blockedDot.style.backgroundColor = blocked ? "red" : "green";
 }
 
+function makeMove(targetSquare) {
+  const knight = document.getElementById("knight");
+  startTimer();
+  moveCount++;
+  updateMoveCounter();
+
+  knight.style.transition = "transform 0.3s ease-out";
+  targetSquare.appendChild(knight);
+  new Audio("./alerts/move-sound.ogg").play();
+
+  if (parseInt(targetSquare.id) === path[ptr]) {
+    targetSquare.style.backgroundColor = "#BBF7D0";
+    ptr++;
+    if (ptr < path.length) {
+      showPath();
+    } else {
+      stopTimer();
+      celebrate();
+      showVictoryScreen();
+    }
+  }
+}
+
+// UI functions
+function showInvalidMoveAnimation(square) {
+  square.classList.add("shake");
+  setTimeout(() => square.classList.remove("shake"), 500);
+}
+
+function updateMoveCounter() {
+  const counter = document.getElementById("moveCounter");
+  counter.textContent = `Moves: ${moveCount}`;
+}
+
+function showVictoryScreen() {
+  const victoryScreen = document.createElement("div");
+  victoryScreen.className =
+    "fixed inset-0 bg-black/50 flex items-center justify-center";
+  victoryScreen.innerHTML = `
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold text-center mb-4">Puzzle Completed!</h2>
+            <div class="space-y-2 text-center mb-4">
+                <p>Time: ${document.getElementById("stopwatch").textContent}</p>
+                <p>Moves: ${moveCount}</p>
+            </div>
+            <div class="flex justify-center gap-4">
+                <button onclick="resetBoard()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    Play Again
+                </button>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+  document.body.appendChild(victoryScreen);
+}
+
+// Timer functions
 function formatTime(elapsed) {
   const hours = String(Math.floor(elapsed / (1000 * 60 * 60))).padStart(2, "0");
   const minutes = String(
@@ -230,13 +226,11 @@ function formatTime(elapsed) {
   return `${hours}:${minutes}:${seconds}`;
 }
 
-// Update the displayed time
 function updateTimer() {
   const elapsed = Date.now() - startTime;
   document.getElementById("stopwatch").textContent = formatTime(elapsed);
 }
 
-// Start the timer
 function startTimer() {
   if (!isRunning) {
     startTime = Date.now();
@@ -245,59 +239,173 @@ function startTimer() {
   }
 }
 
-// Stop the timer and store the interval
 function stopTimer() {
   if (isRunning) {
     clearInterval(timerInterval);
     const elapsed = Date.now() - startTime;
     document.getElementById("stopwatch").textContent = formatTime(elapsed);
-    console.log(`Interval Stored: ${formatTime(elapsed)}`);
     isRunning = false;
   }
 }
+
 function resetTimer() {
-  stopTimer(); // Stop the timer if running
-  document.getElementById("stopwatch").textContent = "00:00:00"; // Reset display
-  startTime = null; // Clear the start time
+  stopTimer();
+  document.getElementById("stopwatch").textContent = "00:00:00";
+  startTime = null;
 }
 
+// Board functions
+function showPath() {
+  const currDiv = document.getElementById(path[ptr]);
+  if (currDiv) {
+    currDiv.style.backgroundColor = "#fdf718";
+  }
+}
+
+function showBlocked() {
+  blocked = !blocked;
+  globalFalse.forEach((id) => {
+    const element = document.getElementById(id);
+    const [row, col] = getRowCol(id);
+    if (blocked) {
+      element.style.border = "1px solid rgb(209, 213, 219)";
+      const isLight = (row + col) % 2 === 0;
+      element.style.backgroundColor = isLight ? "#FEE2E2" : "#FECACA";
+    } else {
+      const isLight = (row + col) % 2 === 0;
+      element.style.backgroundColor = isLight ? "#F3F4F6" : "#D1D5DB";
+      element.style.border = "none";
+    }
+  });
+  document.getElementById("blockedDot").style.backgroundColor = blocked
+    ? "#EF4444"
+    : "#22C55E";
+}
+
+// Drag and drop functions
+function allowDrop(ev) {
+  ev.preventDefault();
+}
+
+function drag(ev) {
+  ev.dataTransfer.setData("text", ev.target.id);
+}
+
+function drop(ev) {
+  ev.preventDefault();
+  var data = ev.dataTransfer.getData("text");
+  const knight = document.getElementById(data);
+  const currDiv = knight.parentNode;
+  const currDivId = parseInt(currDiv.id);
+
+  if (ev.target && ev.target.id) {
+    const targetDivId = parseInt(ev.target.id);
+
+    if (isLegalMove(currDivId, targetDivId)) {
+      makeMove(ev.target);
+    } else {
+      // If the knight is dropped on the same square where it was picked up, don't increment `wrongMoves`
+      if (currDivId !== targetDivId && currDivId !== 0) {
+        wrongMoves++;
+      }
+
+      console.log(wrongMoves);
+
+      // Show message based on difficulty
+      if (difficulty === "hard" && wrongMoves >= 3) {
+        showTryAgainPopup("You made 3 wrong moves!", "Go again!");
+      } else if (difficulty === "expert") {
+        showTryAgainPopup("You made a wrong move!", "Go Again!");
+      }
+
+      // Play error sound and show invalid move animation
+      new Audio("./alerts/decline.mp3").play();
+      showInvalidMoveAnimation(ev.target);
+    }
+  }
+}
+
+// Function to show the popup
+function showTryAgainPopup(title, message) {
+  const tryAgain = document.createElement("div");
+  tryAgain.className = "fixed inset-0 bg-black/50 flex items-center justify-center";
+  tryAgain.innerHTML = `
+    <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <h2 class="text-2xl font-bold text-center mb-4">${title}</h2>
+        <p class="text-center mb-4">${message}</p>
+        <div class="flex justify-center gap-4">
+            <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-gray-600">
+                Yes
+            </button>
+        </div>
+    </div>
+  `;
+  document.body.appendChild(tryAgain);
+}
+
+
 function initBoard() {
+  moveCount = 0;
   ptr = 0;
+  updateMoveCounter();
+  resetTimer();
+
   chessBoard = document.querySelector(".chess-board");
-  chessBoard.innerHTML = ""; // Clear any previous squares
-  // create the 8 x 8 chess board
-  // colour of the square
+  chessBoard.innerHTML = "";
 
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
       const square = document.createElement("div");
-      square.style.border = "1px solid black";
       square.ondrop = drop;
       square.ondragover = allowDrop;
-      square.className = "square";
+      square.onclick = handleSquareClick;
+      square.className =
+        "square transition-colors duration-200 flex items-center justify-center";
       square.id = row * 8 + col + 1;
-      // Add the queen to the square at (3,3)
+
       if ((row + col) % 2 === 0) {
-        square.classList.add("light");
+        square.classList.add("bg-gray-100");
       } else {
-        square.classList.add("dark");
+        square.classList.add("bg-gray-300");
       }
       chessBoard.appendChild(square);
     }
   }
 
-  // Place the queen at (3,3) and knight at (0,7)
   let squares = document.querySelectorAll(".square");
-  squares[3 * 8 + 3].appendChild(QueenImg); // (3,3)
-  squares[7].appendChild(KnightImg); // (0,7)
+  squares[3 * 8 + 3].appendChild(QueenImg);
+  squares[7].appendChild(KnightImg);
   showPath();
 }
 
+function handleSquareClick(e) {
+  if (selectedSquare && e.target !== KnightImg) {
+    const targetSquare = e.target.classList.contains("square")
+      ? e.target
+      : e.target.parentNode;
+    if (isLegalMove(parseInt(selectedSquare.id), parseInt(targetSquare.id))) {
+      makeMove(targetSquare);
+    } else {
+      new Audio("./alerts/decline.mp3").play();
+      showInvalidMoveAnimation(targetSquare);
+    }
+    deselectSquare();
+  }
+}
+
+function changeDifficulty(value) {
+  difficulty = value;
+  resetBoard();
+}
+
 function resetBoard() {
-  resetTimer();
   moves = [];
   reached = [];
-  initBoard();
+  coloured = [];
+  wrongMoves = 0;
+  window.onload = initBoard();
 }
-// Initialize the board for the first time
+
+// Initialize the board when the page loads
 window.onload = initBoard;
