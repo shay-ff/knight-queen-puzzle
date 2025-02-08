@@ -143,7 +143,7 @@ function showLegalMoves(square) {
     if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
       if (!globalFalse.includes(newId)) {
         const targetSquare = document.getElementById(newId);
-        targetSquare.classList.add("legal-move");
+        // targetSquare.classList.add("legal-move");
       }
     }
   }
@@ -275,6 +275,7 @@ function showBlocked() {
       element.style.border = "1px solid rgb(209, 213, 219)";
       const isLight = (row + col) % 2 === 0;
       element.style.backgroundColor = isLight ? "#FEE2E2" : "#FECACA";
+      element.style.border = "none";
     } else {
       const isLight = (row + col) % 2 === 0;
       element.style.backgroundColor = isLight ? "#F3F4F6" : "#D1D5DB";
@@ -304,7 +305,7 @@ function drop(ev) {
 
   if (ev.target && ev.target.id) {
     const targetDivId = parseInt(ev.target.id);
-    
+
     if (isLegalMove(currDivId, targetDivId)) {
       makeMove(ev.target);
     } else {
